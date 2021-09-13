@@ -1,14 +1,8 @@
-import json
-import requests
 import random
-import math
-import hashlib
+import asyncio
 import sys
-from bencoding import Decoder, Encoder
-from urllib.parse import urlencode
 from torrent import Torrent
-
-# PORT = 6888
+from tracker import Tracker
 
 print("Name of torrent file: ", sys.argv[1])
 
@@ -18,6 +12,16 @@ print(torrent.output_file)
 print(torrent.announce)
 print(torrent.piece_length)
 print(torrent.pieces[0])
+
+peer_id = '-BT1010-' + ''.join([str(random.randint(0, 9)) for _ in range(12)])
+
+tracker = Tracker(torrent)
+response = asyncio.run(tracker.makeRequestToTracker(peer_id, 0, 0))
+
+print(response.interval)
+print(response.seeders)
+print(response.leechers)
+print(response.peers)
 
 
 # file = open(filePath, "rb")
@@ -45,7 +49,7 @@ print(torrent.pieces[0])
 # announceString = (metaInfoDict[b'announce']).decode("utf-8")
 # print(announceString)
 
-# peer_id = '-BT1010-' + ''.join([str(random.randint(0, 9)) for _ in range(12)])
+
 
 # # Request to Tracker:
 # paramsForTracker = urlencode({
