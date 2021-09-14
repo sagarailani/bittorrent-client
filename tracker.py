@@ -33,14 +33,13 @@ class Tracker:
 
     def __init__(self, torrent) : 
         self.torrent = torrent
-        
+        self.client = aiohttp.ClientSession()
         
     async def makeRequestToTracker(self,
                             peer_id,
                             downloaded,
                             uploaded) :
-        # Move this client session config back to __init__ when tracker is wrapped inside bittorrent-client loop
-        self.client = aiohttp.ClientSession()
+        
         params = {
             'info_hash': self.torrent.infoHash,
             'peer_id': peer_id,
@@ -50,16 +49,17 @@ class Tracker:
             'left': self.torrent.total_size - downloaded,
             'compact': 1
         }
-
         url = self.torrent.announce + '?' + urlencode(params)    
         print("Connecting to tracker at {}".format(url))
-
+        
         async with self.client.get(url) as response:
             if not response.status == 200: 
                 raise ConnectionError("Error connecting to tracker. Status code: {}".format(response.status))
             data = await response.read()
-            await self.client.close()
             return TrackerResponse(Decoder(data).decode())
+        
+    def close(self) :
+        self.client.close()
 
 
 def _decode_port(port):
