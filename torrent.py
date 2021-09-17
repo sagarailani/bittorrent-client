@@ -55,7 +55,7 @@ class Torrent:
         pieces = []
         offset = 0
         length = len(piecesData)
-        while(offset < length) :
+        while(offset < length):
             pieces.append(piecesData[offset:offset+20])
             offset += 20
         return pieces        
