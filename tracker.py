@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 from bencoding import Decoder
+from piecemanager import PieceManager
 from collections import namedtuple
 import socket
 from struct import unpack
@@ -34,6 +35,12 @@ class Tracker:
     def __init__(self, torrent) : 
         self.torrent = torrent
         self.client = aiohttp.ClientSession()
+
+        self.pieceManager = PieceManager(torrent)
+        print("Missing pieces: ")
+        print(self.pieceManager.missing_pieces[0].index)
+        print(self.pieceManager.missing_pieces[0].hash_value)
+        print(self.pieceManager.missing_pieces[0].blocks)
         
     async def makeRequestToTracker(self,
                             peer_id,

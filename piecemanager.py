@@ -1,5 +1,7 @@
 from hashlib import sha1
+import math
 
+REQUEST_SIZE = 2**14
 class Block:
 
     Missing = 0
@@ -60,4 +62,36 @@ class Piece:
         retrieved = sorted(self.blocks, key=lambda b: b.offset)
         return b''.join(block.data for block in retrieved)
 
+class PieceManager:
 
+    def __init__(self, torrent):
+        self.torrent = torrent    
+        self.have_pieces = []
+        self.ongoing_pieces = []
+        self.pending_blocks = []
+        self.missing_pieces = self._initiate_pieces()
+        self.total_pieces = len(self.torrent.pieces)
+
+    def _initiate_pieces(self):
+        total_pieces = self.torrent.pieces
+        std_piece_blocks = math.ceil(self.torrent.piece_length / REQUEST_SIZE)
+        pieces = []
+
+        for index, hashvalue in enumerate(total_pieces):
+
+            if index < (len(total_pieces) - 1):
+                blocks = [Block(index, offset * REQUEST_SIZE, REQUEST_SIZE) for offset in range(std_piece_blocks)]
+            else:
+                last_piece_size = self.torrent.total_size % self.torrent.piece_length
+                last_piece_blocks = math.ceil(last_piece_size / REQUEST_SIZE)
+                blocks = [Block(index, offset * REQUEST_SIZE, REQUEST_SIZE) for offset in range(last_piece_blocks)]
+                if last_piece_size % REQUEST_SIZE > 0:
+                    block = blocks[-1]
+                    block.length = last_piece_size % REQUEST_SIZE
+                    blocks[-1] = block
+            pieces.append(Piece(index, blocks, hashvalue))
+        return pieces
+
+    @property
+    def complete(self):
+        return len(self.have_pieces) == self.total_pieces
